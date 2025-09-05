@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstudaFlash</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estilo.css">
+    <style>
+
+.flashcards {
+        display: flex; /* Faz os cartões ficarem em linha */
+        flex-wrap: wrap; /* Permite que os cartões "quebrem" para a linha de baixo */
+        justify-content: flex-start; /* Alinha os cartões à esquerda */
+        gap: 10px; /* Espaço entre os cartões */
+}
+        .flashcard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 10px;
+            border: 1px solid #FF9800;
+            border-radius: 8px;
+            background-color: #fde5c0;
+            width: 300px;
+            box-sizing: border-box;
+        }
+
+        .flashcard button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <h1>Estudar<span class="flash">Flash</span></h1>
+        <div class="nav-buttons">
+            <!-- Botão Criar com cor verde e texto branco -->
+            <button class="btn-criar" style="background-color: #4CAF50; color: white;" onclick="showCard()">Criar</button>
+            
+            <!-- Botão Excluir com cor vermelha e texto branco -->
+            <button class="btn-excluir" style="background-color: #f44336; color: white;" onclick="excluirCard()">Excluir</button>
+            
+            <a href="#sobre">Sobre</a>
+        </div>
+    </div>
+    
+   
+<div class="cartao" id="cartao" style="display: none; backdrop-filter: blur(5px);"> <!-- Desfoque do fundo -->
+    <div class="cartao-caixa" style="background-color: #FFCC80; border: 2px solid #FF9800; padding: 20px; border-radius: 10px;">
+        <h2 style="color: #FF5722;">Criar card</h2> <!-- Cor da letra do título -->
+        
+        <!-- Input de texto para questão -->
+        <input type="text" id="ques" placeholder="Digite a questão" 
+            style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #FF9800; border-radius: 5px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        
+        <!-- Input de texto para resposta -->
+        <input type="text" id="res" placeholder="Digite a resposta" 
+        style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #FF9800; border-radius: 5px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        
+        <span class="erro" id="erro" style="display: none; color: rgb(228, 0, 0);">Preencha os dois campos</span>
+
+        <div class="bt" style="display: flex; justify-content: space-between; margin-top: 10px;">
+<!-- Botão Salvar -->
+            <button onclick="salvarCard()" style="padding: 10px 20px; background-color: #31b8ca; color: white; border: none; border-radius: 5px; cursor: pointer;">Salvar</button>
+            
+<!-- Botão Cancelar -->
+            <button onclick="hideCard()" style="padding: 10px 20px; background-color: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancelar</button>
+
+        </div>
+    </div>
+</div>
+
+   
+    <div class="flashcards"></div>
+   
+    <div id="tempo">
+        00:00
+    </div>
+   
+    <button class="btn" onclick="iniciarJogo()">Iniciar</button>
+   
+    <div class="sobre" id="sobre">
+        <h1>Como funciona?</h1>
+        <p>Para adicionar um card basta ir no botão criar. Digite a
+            pergunta no<br>
+             primeiro espaço e a resposta no segundo. A pergunta fica <br>
+             na frente do card e a resposta fica no verso. Veja o<br>
+              tempo que leva para responder a questão.</p>
+    </div>
+   
+
+    <script>
+        // Variáveis globais
+        let flashcards = [];
+        let currentCardIndex = 0;
+
+        // Função para mostrar o quadro de criação
+        function showCard() {
+            document.getElementById('cartao').style.display = 'flex';
+        }
+
+        // Função para esconder o quadro de criação
+        function hideCard() {
+            document.getElementById('cartao').style.display = 'none';
+        }
+
+        // Função para salvar um novo card no localStorage
+        function salvarCard() {
+            const pergunta = document.getElementById('ques').value;
+            const resposta = document.getElementById('res').value;
+
+            if (pergunta === '' || resposta === '') {
+                document.getElementById('erro').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('erro').style.display = 'none';
+
+            // Recupera os flashcards do localStorage
+            let flashcards = JSON.parse(localStorage.getItem('flashcards')) || [];
+            // Adiciona o novo card
+            flashcards.push({ pergunta, resposta, acertou: null });
+
+            // Salva no localStorage
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+
+            // Limpa os campos
+            document.getElementById('ques').value = '';
+            document.getElementById('res').value = '';
+
+            // Esconde o quadro de criação
+            hideCard();
+
+            // Atualiza a lista de flashcards
+            mostrarFlashcards();
+        }
+
+// Função para mostrar todos os flashcards
+function mostrarFlashcards() {
+    flashcards = JSON.parse(localStorage.getItem('flashcards')) || [];
+    const container = document.querySelector('.flashcards');
+    container.innerHTML = '';
+
+    flashcards.forEach((card, index) => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('flashcard');
+        cardElement.innerHTML = 
+            `<p><strong>Pergunta:</strong> ${card.pergunta}</p>
+             <p><strong>Resposta:</strong> ${card.resposta}</p>
+             <button onclick="marcarResultado(${index}, true)">Acertou</button>
+             <button onclick="marcarResultado(${index}, false)">Errou</button>`;
+        container.appendChild(cardElement);
+    });
+}
+
+        // Função para marcar se o usuário acertou ou errou
+        function marcarResultado(index, acertou) {
+            flashcards[index].acertou = acertou;
+
+            // Atualiza no localStorage
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+
+            // Exibe o próximo cartão
+            currentCardIndex++;
+            mostrarCartaoAtual();
+        }
+
+        // Função para excluir o último cartão
+        function excluirCard() {
+            let flashcards = JSON.parse(localStorage.getItem('flashcards')) || [];
+            flashcards.pop(); // Remove o último card
+            localStorage.setItem('flashcards', JSON.stringify(flashcards));
+            mostrarFlashcards(); // Atualiza a exibição
+        }
+
+        // Função para iniciar o jogo e exibir cartões um de cada vez
+        function iniciarJogo() {
+            flashcards = JSON.parse(localStorage.getItem('flashcards')) || [];
+
+            if (flashcards.length === 0) {
+                alert("Nenhum cartão disponível!");
+                return;
+            }
+
+            // Embaralha os flashcards
+            flashcards = flashcards.sort(() => Math.random() - 0.5);
+
+            currentCardIndex = 0;
+            mostrarCartaoAtual();
+        }
+
+        // Função para mostrar o cartão atual
+        function mostrarCartaoAtual() {
+    const container = document.querySelector('.flashcards');
+    container.innerHTML = '';
+
+    if (currentCardIndex >= flashcards.length) {
+        container.innerHTML = '<h2>Você completou o jogo!</h2>';
+        return;
+    }
+
+    const card = flashcards[currentCardIndex];
+    const cardElement = document.createElement('div');
+    cardElement.classList.add('cartao-caixa');
+    cardElement.innerHTML = 
+        `<h2>${card.pergunta}</h2>
+         <button onclick="mostrarResposta(${currentCardIndex})">Ver Resposta</button>
+         <div id="resposta-${currentCardIndex}" style="display:none;">
+             <p><strong>Resposta:</strong> ${card.resposta}</p>
+             <button onclick="marcarResultado(${currentCardIndex}, true)">Acertou</button>
+             <button onclick="marcarResultado(${currentCardIndex}, false)">Errou</button>
+         </div>`;
+    container.appendChild(cardElement);
+}
+
+        // Função para mostrar a resposta do cartão
+        function mostrarResposta(index) {
+            document.getElementById(`resposta-${index}`).style.display = 'block';
+        }
+        // Chama a função para exibir os flashcards ao carregar a página
+        window.onload = mostrarFlashcards;
+    </script>
+
+</body>
+</html>
